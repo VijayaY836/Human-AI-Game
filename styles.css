@@ -226,7 +226,8 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 @keyframes wave{ 0%,100%{ height:12px;} 50%{ height:48px;} }
 .c-voice .voice-hint{ font-size:.95rem; color:var(--ink-soft); }
 
-.voice-controls{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+.voice-controls{ display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+.voice-controls-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
 .btn-play{
   font-family:var(--font-display); font-weight:700; font-size:1rem; color:#fff; padding:12px 22px; border-radius:13px;
   background:linear-gradient(120deg,var(--ai),var(--ai-2)); box-shadow:0 10px 24px -8px rgba(18,199,199,.5);
@@ -235,6 +236,7 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .btn-play:hover{ transform:translateY(-2px); }
 .voice-note{ font-size:.82rem; color:var(--ink-soft); }
 .voice-note em{ color:var(--ink); font-style:normal; font-weight:600; }
+.voice-subnote{ margin:0; font-size:.74rem; color:var(--ink-soft); opacity:.85; }
 
 /* verdict */
 .verdict-q{ text-align:center; font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:6px 0 16px; color:var(--ink); }
