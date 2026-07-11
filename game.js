@@ -349,6 +349,15 @@
   $('#guessHuman').addEventListener('click', () => guess('human'));
   $('#guessAI').addEventListener('click', () => guess('ai'));
 
+  $('#quitBtn').addEventListener('click', () => {
+    const sure = confirm('Quit this round? Your progress in this game won\u2019t be saved.');
+    if (!sure) return;
+    stopVoice();
+    $('#reveal').classList.add('hidden');
+    renderBoard($('#startBoard'));
+    show('screen-start');
+  });
+
   $$('.len').forEach(b => b.addEventListener('click', () => {
     $$('.len').forEach(x => x.classList.remove('is-on'));
     b.classList.add('is-on'); chosenLen = +b.dataset.len;

@@ -68,6 +68,7 @@
   <!-- ============================ GAME ============================= -->
   <section id="screen-game" class="screen" aria-label="Play">
     <div class="hud">
+      <button id="quitBtn" class="hud-quit" title="Quit this round">✕ Quit</button>
       <div class="hud-cell">
         <span class="hud-k">Round</span>
         <span class="hud-v"><span id="roundNow">1</span><span class="hud-of">/ <span id="roundTot">8</span></span></span>
@@ -168,6 +169,17 @@
   </section>
 
 </main>
+
+<!-- ========================= QUIT CONFIRM ======================== -->
+<div id="quitConfirm" class="quit-confirm hidden" role="dialog" aria-modal="true" aria-label="Quit this round?">
+  <div class="quit-card">
+    <p class="quit-msg">Quit this round? Your progress on it won't be saved.</p>
+    <div class="quit-actions">
+      <button id="quitCancel" class="btn-quit-secondary">Keep playing</button>
+      <button id="quitConfirmBtn" class="btn-quit-primary">Quit</button>
+    </div>
+  </div>
+</div>
 
 <!-- confetti canvas -->
 <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
