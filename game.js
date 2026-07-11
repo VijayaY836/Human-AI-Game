@@ -96,7 +96,7 @@
   function renderContent(item){
     $('#roundType').textContent = ({text:'Text', code:'Code', art:'Artwork', image:'Image', voice:'Voice'})[item.type];
     $('#voiceControls').classList.add('hidden');
-    if (speechSynthesis){ speechSynthesis.cancel(); setPlayBtn('play'); }
+    if ('speechSynthesis' in window) stopVoice();
 
     if (item.type === 'text'){
       stage.innerHTML = `<p class="c-text">${esc(item.content)}</p>`;
@@ -113,51 +113,83 @@
   }
 
   /* =============================== VOICE ================================= */
-  let voiceUtter = null;
+  // NOTE: speechSynthesis.pause() is unreliable across browsers (notably Chrome,
+  // where it often keeps talking until the utterance ends instead of stopping
+  // immediately). To get a pause that actually stops instantly, we split the
+  // passage into sentences and use cancel() — which *is* reliable — to stop,
+  // remembering which sentence to resume from next.
   const playBtn = $('#playVoice');
+  let vq = null;           // { sentences, idx }
+  let activeUtter = null;  // the SpeechSynthesisUtterance currently in flight, if any
 
   function setPlayBtn(state){
-    // state: 'play' | 'pause' | 'resume'
-    if (state === 'pause')      playBtn.innerHTML = '⏸ Pause';
+    if (state === 'pause')       playBtn.innerHTML = '⏸ Pause';
     else if (state === 'resume') playBtn.innerHTML = '▶ Resume';
     else                          playBtn.innerHTML = '▶ Play clip';
   }
 
-  function stopVoice(){
+  function splitSentences(text){
+    return (text.match(/[^.!?]+[.!?]*/g) || [text]).map(s => s.trim()).filter(Boolean);
+  }
+
+  // cancel() reliably stops audio instantly, unlike pause() which can lag in some
+  // browsers (notably Chrome). We mark the in-flight utterance as deliberately
+  // cancelled *before* calling cancel(), so its (possibly async) onend/onerror
+  // knows to no-op instead of being mistaken for the sentence finishing naturally.
+  function cancelActive(){
+    if (activeUtter) activeUtter._cancelled = true;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
+    activeUtter = null;
+  }
+
+  function stopVoice(){
+    cancelActive();
+    vq = null;
     const wave = $('.c-voice');
     wave && wave.classList.remove('playing');
     setPlayBtn('play');
   }
 
-  function speak(text){
-    if (!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    voiceUtter = new SpeechSynthesisUtterance(text);
-    voiceUtter.rate = 1; voiceUtter.pitch = 1;
+  function speakFromQueue(){
+    if (!vq || vq.idx >= vq.sentences.length){
+      stopVoice();
+      return;
+    }
+    const wave = $('.c-voice');
+    const u = new SpeechSynthesisUtterance(vq.sentences[vq.idx]);
+    u.rate = 1; u.pitch = 1;
     const vs = speechSynthesis.getVoices();
     const pref = vs.find(v => /en[-_]/i.test(v.lang)) || vs[0];
-    if (pref) voiceUtter.voice = pref;
-    const wave = $('.c-voice');
-    voiceUtter.onstart = () => { wave && wave.classList.add('playing'); setPlayBtn('pause'); };
-    voiceUtter.onend   = () => { wave && wave.classList.remove('playing'); setPlayBtn('play'); };
-    voiceUtter.onerror = () => { wave && wave.classList.remove('playing'); setPlayBtn('play'); };
-    speechSynthesis.speak(voiceUtter);
+    if (pref) u.voice = pref;
+    activeUtter = u;
+
+    u.onstart = () => { wave && wave.classList.add('playing'); setPlayBtn('pause'); };
+    const advance = () => {
+      if (u._cancelled) return;        // this end/error came from a deliberate cancel — ignore
+      if (!vq) return;
+      vq.idx++;
+      if (vq.idx >= vq.sentences.length){ stopVoice(); }
+      else { speakFromQueue(); }       // seamlessly continue to the next sentence
+    };
+    u.onend = advance;
+    u.onerror = advance;
+    speechSynthesis.speak(u);
   }
 
   playBtn.addEventListener('click', () => {
-    if (!game.current) return;
-    if (!('speechSynthesis' in window)) return;
-    if (!speechSynthesis.speaking){
-      speak(game.current.content);              // nothing loaded — start fresh
-    } else if (speechSynthesis.paused){
-      speechSynthesis.resume();                  // paused — resume
-      $('.c-voice')?.classList.add('playing');
-      setPlayBtn('pause');
-    } else {
-      speechSynthesis.pause();                   // playing — pause
+    if (!game.current || !('speechSynthesis' in window)) return;
+
+    if (!vq){
+      vq = { sentences: splitSentences(game.current.content), idx: 0 };
+      speakFromQueue();
+    } else if ($('.c-voice')?.classList.contains('playing')){
+      // currently playing → pause: cancel() stops instantly and reliably
+      cancelActive();
       $('.c-voice')?.classList.remove('playing');
       setPlayBtn('resume');
+    } else {
+      // paused → resume from the same sentence
+      speakFromQueue();
     }
   });
 
