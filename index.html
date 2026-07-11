@@ -28,7 +28,6 @@
     <button id="soundBtn" class="icon-btn" title="Toggle sound" aria-pressed="true">
       <span class="ico-sound">♪</span>
     </button>
-    <button id="settingsBtn" class="icon-btn" title="Settings (OpenRouter key)">⚙</button>
   </div>
 </header>
 
@@ -58,7 +57,6 @@
       </div>
 
       <button id="startBtn" class="btn-primary">Start the game</button>
-      <p id="liveHint" class="live-hint hidden">⚡ Live rounds on — fresh AI samples from OpenRouter</p>
     </div>
 
     <aside class="board-card">
@@ -168,43 +166,10 @@
 
 </main>
 
-<!-- ========================= SETTINGS MODAL ======================== -->
-<div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Settings">
-  <div class="modal-card">
-    <button id="closeSettings" class="modal-x" aria-label="Close">✕</button>
-    <h2 class="modal-title">Live rounds</h2>
-    <p class="modal-sub">
-      Optional. Add an <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">OpenRouter</a> key
-      to have a model write <em>fresh</em> AI samples each round. Stored only in this browser.
-    </p>
-
-    <label class="field">
-      <span class="field-k">API key</span>
-      <input id="keyInput" type="password" placeholder="sk-or-v1-…" autocomplete="off" />
-    </label>
-    <label class="field">
-      <span class="field-k">Model</span>
-      <input id="modelInput" type="text" placeholder="google/gemini-2.0-flash-001" />
-    </label>
-
-    <label class="toggle">
-      <input id="liveToggle" type="checkbox" />
-      <span>Use live AI rounds when a key is set</span>
-    </label>
-
-    <div class="modal-actions">
-      <button id="testKey" class="btn-ghost">Test key</button>
-      <button id="saveSettings" class="btn-primary compact">Save</button>
-    </div>
-    <p id="settingsMsg" class="settings-msg"></p>
-  </div>
-</div>
-
 <!-- confetti canvas -->
 <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
 
 <script src="data.js"></script>
-<script src="openrouter.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

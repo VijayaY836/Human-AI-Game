@@ -154,13 +154,7 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .btn-primary.compact{ font-size:.98rem; padding:12px 22px; border-radius:13px; }
 .btn-primary:disabled{ opacity:.55; cursor:wait; transform:none; }
 
-.btn-ghost{
-  font-weight:600; color:var(--ai-ink); background:transparent; padding:12px 20px; border-radius:13px;
-  box-shadow:inset 0 0 0 2px var(--line); transition:box-shadow .2s, background .2s;
-}
-.btn-ghost:hover{ background:#f2f0ff; box-shadow:inset 0 0 0 2px #d9d4ff; }
 
-.live-hint{ margin:16px 0 0; font-family:var(--font-mono); font-size:.8rem; color:var(--ai-ink); }
 .hidden{ display:none !important; }
 
 /* leaderboard card */
@@ -321,24 +315,6 @@ button{ font-family:inherit; cursor:pointer; border:none; }
 .results-board .board-title{ margin-bottom:12px; }
 
 /* ============================ settings ============================= */
-.modal{ position:fixed; inset:0; z-index:40; display:grid; place-items:center; padding:20px;
-  background:rgba(36,27,58,.4); backdrop-filter:blur(6px); animation:fadeIn .25s var(--ease); }
-.modal-card{ width:min(460px,100%); background:var(--surface); border-radius:var(--r-lg); padding:30px; box-shadow:var(--shadow-lg); position:relative; animation:pop .35s var(--ease); }
-.modal-x{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:10px; background:var(--bg); color:var(--ink-soft); font-size:.9rem; }
-.modal-x:hover{ background:#eceafb; }
-.modal-title{ font-family:var(--font-display); font-weight:800; font-size:1.5rem; margin:0 0 8px; }
-.modal-sub{ color:var(--ink-soft); font-size:.92rem; line-height:1.55; margin:0 0 22px; }
-.field{ display:block; margin-bottom:16px; }
-.field-k{ display:block; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:7px; }
-.field input{ width:100%; padding:12px 14px; border-radius:12px; border:none; box-shadow:inset 0 0 0 2px var(--line);
-  font-family:var(--font-mono); font-size:.9rem; color:var(--ink); }
-.field input:focus{ outline:none; box-shadow:inset 0 0 0 2px var(--ai); }
-.toggle{ display:flex; align-items:center; gap:10px; font-size:.94rem; color:var(--ink); margin-bottom:22px; cursor:pointer; }
-.toggle input{ width:18px; height:18px; accent-color:var(--ai); }
-.modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
-.settings-msg{ margin:14px 0 0; font-family:var(--font-mono); font-size:.82rem; min-height:1.2em; }
-.settings-msg.ok{ color:var(--good); }
-.settings-msg.err{ color:var(--bad); }
 
 /* confetti */
 .confetti{ position:fixed; inset:0; z-index:50; pointer-events:none; }

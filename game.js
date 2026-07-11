@@ -8,12 +8,10 @@
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const LS = {
     board:    'hai_board',
-    settings: 'hai_settings',
     sound:    'hai_sound'
   };
 
   /* --------------------------- persistent state --------------------------- */
-  const settings = load(LS.settings, { key: '', model: 'google/gemini-2.0-flash-001', live: false });
   let board = load(LS.board, []);
   let soundOn = load(LS.sound, true);
 
@@ -85,15 +83,8 @@
     for (let i=0;i<maxLen;i++){ if (humans[i]) woven.push(humans[i]); if (ais[i]) woven.push(ais[i]); }
 
     const specs = [];
-    const liveOn = settings.live && settings.key;
     for (let i=0;i<len;i++){
-      const bankItem = woven[i % woven.length];
-      // ~40% of eligible slots become live AI rounds (text/code only)
-      if (liveOn && Math.random() < 0.4){
-        specs.push({ kind:'live', type: Math.random() < 0.5 ? 'text' : 'code', fallback: bankItem });
-      } else {
-        specs.push({ kind:'bank', item: bankItem });
-      }
+      specs.push({ item: woven[i % woven.length] });
     }
     return shuffle(specs);
   }
@@ -105,7 +96,7 @@
   function renderContent(item){
     $('#roundType').textContent = ({text:'Text', code:'Code', art:'Artwork', image:'Image', voice:'Voice'})[item.type];
     $('#voiceControls').classList.add('hidden');
-    speechSynthesis && speechSynthesis.cancel();
+    if (speechSynthesis){ speechSynthesis.cancel(); setPlayBtn('play'); }
 
     if (item.type === 'text'){
       stage.innerHTML = `<p class="c-text">${esc(item.content)}</p>`;
@@ -121,13 +112,24 @@
     }
   }
 
-  function renderLoading(){
-    stage.innerHTML = `<p class="c-text" style="color:var(--ink-soft)">⚡ generating a fresh sample…</p>`;
-    $('#roundType').textContent = 'Live';
-  }
-
   /* =============================== VOICE ================================= */
   let voiceUtter = null;
+  const playBtn = $('#playVoice');
+
+  function setPlayBtn(state){
+    // state: 'play' | 'pause' | 'resume'
+    if (state === 'pause')      playBtn.innerHTML = '⏸ Pause';
+    else if (state === 'resume') playBtn.innerHTML = '▶ Resume';
+    else                          playBtn.innerHTML = '▶ Play clip';
+  }
+
+  function stopVoice(){
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    const wave = $('.c-voice');
+    wave && wave.classList.remove('playing');
+    setPlayBtn('play');
+  }
+
   function speak(text){
     if (!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
@@ -137,11 +139,27 @@
     const pref = vs.find(v => /en[-_]/i.test(v.lang)) || vs[0];
     if (pref) voiceUtter.voice = pref;
     const wave = $('.c-voice');
-    voiceUtter.onstart = () => wave && wave.classList.add('playing');
-    voiceUtter.onend   = () => wave && wave.classList.remove('playing');
+    voiceUtter.onstart = () => { wave && wave.classList.add('playing'); setPlayBtn('pause'); };
+    voiceUtter.onend   = () => { wave && wave.classList.remove('playing'); setPlayBtn('play'); };
+    voiceUtter.onerror = () => { wave && wave.classList.remove('playing'); setPlayBtn('play'); };
     speechSynthesis.speak(voiceUtter);
   }
-  $('#playVoice').addEventListener('click', () => { if (game.current) speak(game.current.content); });
+
+  playBtn.addEventListener('click', () => {
+    if (!game.current) return;
+    if (!('speechSynthesis' in window)) return;
+    if (!speechSynthesis.speaking){
+      speak(game.current.content);              // nothing loaded — start fresh
+    } else if (speechSynthesis.paused){
+      speechSynthesis.resume();                  // paused — resume
+      $('.c-voice')?.classList.add('playing');
+      setPlayBtn('pause');
+    } else {
+      speechSynthesis.pause();                   // playing — pause
+      $('.c-voice')?.classList.remove('playing');
+      setPlayBtn('resume');
+    }
+  });
 
   /* ============================== ROUNDS ================================= */
   async function loadRound(){
@@ -149,17 +167,7 @@
     $('#roundNow').textContent = game.idx + 1;
     $('#progBar').style.width = ((game.idx) / game.deck.length * 100) + '%';
     enableGuess(true);
-
-    if (spec.kind === 'live'){
-      renderLoading();
-      try {
-        game.current = await window.OpenRouter.generate({ apiKey: settings.key, model: settings.model, type: spec.type });
-      } catch (e){
-        game.current = spec.fallback; // graceful fallback to the curated bank
-      }
-    } else {
-      game.current = spec.item;
-    }
+    game.current = spec.item;
     renderContent(game.current);
   }
 
@@ -201,7 +209,7 @@
     needle.style.left = '50%';
     verdict.className = 'reveal-verdict ' + (right ? 'ok' : 'no');
     verdict.textContent = right ? 'Correct!' : 'Not quite';
-    truthEl.innerHTML = `It was <strong>${truth === 'human' ? 'Human' : 'AI'}</strong>${game.current.live ? ' — live-generated just now' : ''}.`;
+    truthEl.innerHTML = `It was <strong>${truth === 'human' ? 'Human' : 'AI'}</strong>.`;
 
     const tells = $('#revealTells');
     tells.innerHTML = (game.current.tells || []).map(t => `<li>${esc(t)}</li>`).join('');
@@ -213,7 +221,7 @@
     if (right) confetti();
 
     // stop any voice playback on reveal
-    speechSynthesis && speechSynthesis.cancel();
+    stopVoice();
   }
 
   $('#nextBtn').addEventListener('click', () => {
@@ -320,53 +328,9 @@
   paintSound();
   soundBtn.addEventListener('click', () => { soundOn = !soundOn; save(LS.sound, soundOn); paintSound(); if (soundOn) sfxClick(); });
 
-  /* ============================= SETTINGS =============================== */
-  const modal = $('#settingsModal');
-  function openSettings(){
-    $('#keyInput').value   = settings.key || '';
-    $('#modelInput').value = settings.model || 'google/gemini-2.0-flash-001';
-    $('#liveToggle').checked = !!settings.live;
-    $('#settingsMsg').textContent = ''; $('#settingsMsg').className = 'settings-msg';
-    modal.classList.remove('hidden');
-  }
-  function closeSettings(){ modal.classList.add('hidden'); }
-  $('#settingsBtn').addEventListener('click', openSettings);
-  $('#closeSettings').addEventListener('click', closeSettings);
-  modal.addEventListener('click', e => { if (e.target === modal) closeSettings(); });
-
-  $('#saveSettings').addEventListener('click', () => {
-    settings.key = $('#keyInput').value.trim();
-    settings.model = $('#modelInput').value.trim() || 'google/gemini-2.0-flash-001';
-    settings.live = $('#liveToggle').checked;
-    save(LS.settings, settings);
-    reflectLive();
-    const msg = $('#settingsMsg'); msg.className = 'settings-msg ok';
-    msg.textContent = settings.live && settings.key ? 'Saved — live rounds on.' : 'Saved.';
-    setTimeout(closeSettings, 700);
-  });
-
-  $('#testKey').addEventListener('click', async () => {
-    const msg = $('#settingsMsg'); msg.className = 'settings-msg'; msg.textContent = 'Testing…';
-    const key = $('#keyInput').value.trim();
-    const model = $('#modelInput').value.trim() || 'google/gemini-2.0-flash-001';
-    if (!key){ msg.className = 'settings-msg err'; msg.textContent = 'Enter a key first.'; return; }
-    try {
-      await window.OpenRouter.test({ apiKey: key, model });
-      msg.className = 'settings-msg ok'; msg.textContent = '✓ Key works.';
-    } catch (e){
-      msg.className = 'settings-msg err'; msg.textContent = '✕ ' + (e.message || 'Failed.');
-    }
-  });
-
-  function reflectLive(){ $('#liveHint').classList.toggle('hidden', !(settings.live && settings.key)); }
-
-  // Esc closes overlays
-  addEventListener('keydown', e => { if (e.key === 'Escape'){ closeSettings(); } });
-
   /* preload TTS voices (Chrome loads async) */
   if ('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
 
   /* --------------------------------- init -------------------------------- */
   renderBoard($('#startBoard'));
-  reflectLive();
 })();

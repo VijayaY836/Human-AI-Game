@@ -31,13 +31,12 @@ Works the same on Vercel/Netlify — it's a static site, point it at the folder 
 
 | File | What it is |
 |------|-----------|
-| `index.html` | Structure + screens (start / game / results / settings). |
+| `index.html` | Structure + screens (start / game / results). |
 | `styles.css` | The whole look — light dual-pole theme, animations, responsive. |
 | `data.js` | The content bank: 22 hand-built rounds (text, code, artwork, image, voice), each tagged with its tells. |
-| `openrouter.js` | Optional live-generation module (see below). |
 | `game.js` | The engine — deck building, rendering, scoring, reveal meter, SFX, confetti, leaderboard. |
 
-Load order matters (`data → openrouter → game`); `index.html` already wires it correctly.
+Load order is `data → game`; `index.html` already wires it correctly.
 
 ---
 
@@ -61,26 +60,9 @@ The human text, code, artwork and photo samples are real public-domain or permis
 
 ---
 
-## Optional: live AI rounds (OpenRouter)
-
-The game is fully playable offline from the built-in bank. If you want **fresh, never-seen AI samples** generated on the fly, plug in an OpenRouter key:
-
-1. Click the **⚙ Settings** button (top right).
-2. Paste your OpenRouter API key.
-3. (Optional) change the model — default is `google/gemini-2.0-flash-001`. Any OpenRouter chat model works.
-4. Flip **Live rounds** on. Hit **Test key** to confirm it's valid.
-
-When live mode is on, roughly 40% of AI rounds are generated fresh at play time; the rest come from the bank. If a request ever fails (offline, bad key, rate limit), the game silently falls back to the bank and keeps going — it never breaks the run.
-
-**Your key stays in your browser** (`localStorage` only). It is never hardcoded, never sent anywhere except directly to OpenRouter's API from your own browser.
-
----
-
 ## Tech
 
-Vanilla HTML/CSS/JS. Web Audio for SFX, Canvas for confetti, SpeechSynthesis for voice, SVG for artwork, `localStorage` for the leaderboard and settings. Respects `prefers-reduced-motion` and has keyboard focus styles.
-
-Type `google/gemini-2.0-flash-001`, `anthropic/claude-3.5-sonnet`, or whatever you like into the model field — it's just passed through to OpenRouter.
+Vanilla HTML/CSS/JS, no dependencies and no backend. Web Audio for SFX, Canvas for confetti, SpeechSynthesis for the voice rounds, embedded images for the visual rounds, and `localStorage` for the leaderboard. Respects `prefers-reduced-motion` and has keyboard focus styles.
 
 ---
 
