@@ -4,6 +4,8 @@ An interactive guessing game: you're shown a piece of **text, code, artwork, an 
 
 Pure front-end. No build step, no backend, no dependencies. Just open it.
 
+Demo Video : https://drive.google.com/file/d/14pOlb_Y63575l9IqbnCQN_ULuqMTw28n/view?usp=sharing
+
 ---
 
 ## Run it
