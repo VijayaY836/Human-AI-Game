@@ -19,14 +19,6 @@ Double-click `index.html`. That's the whole thing.
 python -m http.server 8000
 # then visit http://localhost:8000
 ```
-
-**Option C — deploy (GitHub Pages)**
-1. Push these files to a repo.
-2. Settings → Pages → Branch: `main`, folder: `/root`.
-3. Your game is live at `https://<user>.github.io/<repo>/`.
-
-Works the same on Vercel/Netlify — it's a static site, point it at the folder and go.
-
 ---
 
 ## Files
